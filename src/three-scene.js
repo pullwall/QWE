@@ -185,7 +185,7 @@ export function createSwitchScene(canvas, handlers = {}) {
     capPivot.add(cap);
     pickMeshes.push(cap);
 
-    keyStates[key] = { pivot: capPivot, target: 0, velocity: 0 };
+    keyStates[key] = { pivot: capPivot, target: 0 };
   });
 
   const raycaster = new THREE.Raycaster();
@@ -242,9 +242,12 @@ export function createSwitchScene(canvas, handlers = {}) {
     const dt = Math.min(.034, Math.max(.001, (now - lastTime) / 1000));
     lastTime = now;
     Object.values(keyStates).forEach((state) => {
-      state.velocity += (state.target - state.pivot.position.y) * 78 * dt;
-      state.velocity *= Math.pow(.0018, dt);
-      state.pivot.position.y += state.velocity * dt;
+      const current = state.pivot.position.y;
+      const response = state.target < current ? 44 : 28;
+      state.pivot.position.y = THREE.MathUtils.damp(current, state.target, response, dt);
+      if (Math.abs(state.target - state.pivot.position.y) < .0005) {
+        state.pivot.position.y = state.target;
+      }
     });
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
@@ -255,7 +258,6 @@ export function createSwitchScene(canvas, handlers = {}) {
     setPressed(key, isPressed) {
       if (!keyStates[key]) return;
       keyStates[key].target = isPressed ? -.32 : 0;
-      if (isPressed) keyStates[key].velocity = -1.5;
     },
     setColors(colors) {
       ['Q', 'W', 'E'].forEach((key, index) => capMaterials[key].color.set(colors[index]));
