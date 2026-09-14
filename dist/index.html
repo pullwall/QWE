@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#f3f8fc" />
-  <meta name="description" content="Q, W, E를 누르며 잠깐 쉬어가는 작은 파스텔 힐링 클리커" />
+  <meta name="description" content="A tiny pastel desktop clicker for Q, W, and E." />
   <title>QWE Healing Clicker</title>
   <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
   <style>
@@ -78,11 +78,13 @@
       position: absolute; top: 15px; right: 18px; z-index: 5;
       width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(143,162,187,.16);
       color: #6e7a91; background: rgba(255,255,255,.72); box-shadow: 0 9px 24px rgba(88,110,139,.12);
-      display: grid; place-items: center; cursor: pointer; opacity: 0; transform: translateY(5px) scale(.94);
+      display: grid; place-items: center; cursor: pointer; opacity: 0; pointer-events: none; transform: translateY(5px) scale(.94);
       transition: opacity .18s ease, transform .18s ease, color .18s ease, background .18s ease;
     }
-    .clicker:not(.expanded):hover .hover-control, .hover-control:focus-visible { opacity: 1; transform: none; }
+    .clicker:not(.expanded):hover .hover-control, .hover-control:focus-visible { opacity: 1; pointer-events: auto; transform: none; }
     .hover-control:hover { color: #3c4a63; background: rgba(255,255,255,.95); }
+    .hover-control.quit-control { right: 66px; }
+    .hover-control.quit-control:hover { color: #d2526f; background: rgba(255,245,248,.96); }
     .hover-control svg { width: 19px; height: 19px; }
     .key-row { position: relative; display: flex; align-items: end; justify-content: center; gap: 15px; padding-bottom: 13px; }
     .key-row::after {
@@ -175,27 +177,30 @@
   </style>
 </head>
 <body>
-  <main class="stage" aria-label="QWE 힐링 클리커">
+  <main class="stage" aria-label="QWE healing clicker">
     <section class="clicker" id="clicker">
       <div class="drag-surface" data-tauri-drag-region></div>
-      <button class="hover-control" id="settingsButton" aria-label="설정 열기" title="설정">
+      <button class="hover-control quit-control" id="hoverQuitButton" aria-label="Quit app" title="Quit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg>
+      </button>
+      <button class="hover-control" id="settingsButton" aria-label="Open settings" title="Settings">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 15.3a3.3 3.3 0 1 0 0-6.6 3.3 3.3 0 0 0 0 6.6Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21H9.55v-.1A1.7 1.7 0 0 0 8.5 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.86-2.86.06-.06A1.7 1.7 0 0 0 4.1 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H2.3V9.55h.1A1.7 1.7 0 0 0 4.1 8.5a1.7 1.7 0 0 0-.34-1.88l-.06-.06L6.56 3.7l.06.06A1.7 1.7 0 0 0 8.5 4.1a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1v-.1h4.05v.1A1.7 1.7 0 0 0 15 4.1a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.86 2.86-.06.06A1.7 1.7 0 0 0 19.4 8.5c.2.5.6.85 1.05 1.05.35.15.7.2 1.05.2h.2v4.05h-.2c-.35 0-.7.05-1.05.2-.45.2-.85.55-1.05 1Z"/></svg>
       </button>
 
       <div class="compact-view" id="compactView">
-        <canvas class="three-stage" id="compactScene" tabindex="0" aria-label="Q W E 3D 키 스위치"></canvas>
+        <canvas class="three-stage" id="compactScene" tabindex="0" aria-label="Q W E 3D key switches"></canvas>
       </div>
 
       <div class="settings-view" aria-hidden="true" id="settingsView">
         <header class="settings-head">
-          <div><h1>Keyboard Clicker</h1><p>잠깐, 눌러 쉬어가요.</p></div>
-          <button class="close-button" id="closeSettings" aria-label="설정 닫기">×</button>
+          <div><h1>Keyboard Clicker</h1><p>A tiny pause at your fingertips.</p></div>
+          <button class="close-button" id="closeSettings" aria-label="Close settings">×</button>
         </header>
-        <div class="settings-key-wrap"><canvas class="three-stage" id="settingsScene" tabindex="0" aria-label="Q W E 3D 키 스위치"></canvas></div>
+        <div class="settings-key-wrap"><canvas class="three-stage" id="settingsScene" tabindex="0" aria-label="Q W E 3D key switches"></canvas></div>
         <div class="settings-stack">
           <section class="setting">
-            <div class="setting-line"><span class="setting-label">소리</span><span class="setting-value" id="soundName">Creamy</span></div>
-            <div class="sound-options" role="radiogroup" aria-label="소리 스타일">
+            <div class="setting-line"><span class="setting-label">Sound</span><span class="setting-value" id="soundName">Creamy</span></div>
+            <div class="sound-options" role="radiogroup" aria-label="Sound style">
               <button class="sound-option" data-sound="soft" role="radio">Soft</button>
               <button class="sound-option active" data-sound="creamy" role="radio">Creamy</button>
               <button class="sound-option" data-sound="clicky" role="radio">Clicky</button>
@@ -203,12 +208,12 @@
             </div>
           </section>
           <section class="setting">
-            <div class="setting-line"><label class="setting-label" for="volume">볼륨</label><span class="setting-value" id="volumeValue">72%</span></div>
-            <div class="range-wrap"><span aria-hidden="true">♩</span><input id="volume" type="range" min="0" max="100" value="72" aria-label="볼륨" /><span aria-hidden="true">♪</span></div>
+            <div class="setting-line"><label class="setting-label" for="volume">Volume</label><span class="setting-value" id="volumeValue">72%</span></div>
+            <div class="range-wrap"><span aria-hidden="true">♩</span><input id="volume" type="range" min="0" max="100" value="72" aria-label="Volume" /><span aria-hidden="true">♪</span></div>
           </section>
           <section class="setting">
-            <div class="setting-line"><span class="setting-label">테마</span><span class="setting-value" id="themeName">Cotton</span></div>
-            <div class="theme-options" role="radiogroup" aria-label="색상 테마">
+            <div class="setting-line"><span class="setting-label">Theme</span><span class="setting-value" id="themeName">Cotton</span></div>
+            <div class="theme-options" role="radiogroup" aria-label="Color theme">
               <button class="theme-dot active" data-theme="cotton" role="radio" aria-label="Cotton" title="Cotton"></button>
               <button class="theme-dot" data-theme="strawberry" role="radio" aria-label="Strawberry" title="Strawberry"></button>
               <button class="theme-dot" data-theme="mint" role="radio" aria-label="Mint" title="Mint"></button>
@@ -216,11 +221,11 @@
             </div>
           </section>
           <div class="toggle-row">
-            <div><div class="setting-label">항상 위에 표시</div><div class="setting-value" id="alwaysHint">데스크톱 앱에서 사용할 수 있어요</div></div>
-            <button class="toggle" id="alwaysOnTop" role="switch" aria-checked="false" aria-label="항상 위에 표시"></button>
+            <div><div class="setting-label">Always on top</div><div class="setting-value" id="alwaysHint">Available in the desktop app</div></div>
+            <button class="toggle" id="alwaysOnTop" role="switch" aria-checked="false" aria-label="Always on top"></button>
           </div>
         </div>
-        <footer class="footer-actions"><span>설정은 이 기기에만 저장됩니다</span><button class="quit-button" id="quitButton">앱 종료</button></footer>
+        <footer class="footer-actions"><span>Settings stay on this device</span><button class="quit-button" id="quitButton">Quit app</button></footer>
       </div>
     </section>
   </main>
@@ -233,6 +238,7 @@
       const clicker = document.getElementById('clicker');
       const settingsView = document.getElementById('settingsView');
       const settingsButton = document.getElementById('settingsButton');
+      const hoverQuitButton = document.getElementById('hoverQuitButton');
       const closeSettings = document.getElementById('closeSettings');
       const pressed = new Set();
       const validKeys = new Set(['Q', 'W', 'E']);
@@ -287,7 +293,12 @@
         tauriInvoke('set_view_mode', { expanded: open });
         if (open) closeSettings.focus(); else settingsButton.focus();
       }
+      function quitApp() {
+        if (isTauri) tauriInvoke('quit_app');
+        else openSettings(false);
+      }
       settingsButton.addEventListener('click', () => openSettings(true));
+      hoverQuitButton.addEventListener('click', quitApp);
       closeSettings.addEventListener('click', () => openSettings(false));
       document.getElementById('compactView').addEventListener('pointerdown', event => {
         if (event.target === event.currentTarget) tauriInvoke('start_dragging');
@@ -316,10 +327,10 @@
       function applyVolume(next) { volume=Number(next); volumeEl.value=volume; volumeEl.style.setProperty('--range',`${volume}%`); document.getElementById('volumeValue').textContent=`${volume}%`; save(); }
       volumeEl.addEventListener('input', e => applyVolume(e.target.value));
       const alwaysButton = document.getElementById('alwaysOnTop');
-      if (!isTauri) alwaysButton.disabled = true; else document.getElementById('alwaysHint').textContent = '다른 창 위에 조용히 머물러요';
+      if (!isTauri) alwaysButton.disabled = true; else document.getElementById('alwaysHint').textContent = 'Keeps the clicker above other windows';
       function applyAlways(next, invoke=true) { always=Boolean(next); alwaysButton.classList.toggle('on',always); alwaysButton.setAttribute('aria-checked',String(always)); if (invoke) tauriInvoke('set_always_on_top',{enabled:always}); save(); }
       alwaysButton.addEventListener('click', () => applyAlways(!always));
-      document.getElementById('quitButton').addEventListener('click', () => isTauri ? tauriInvoke('quit_app') : openSettings(false));
+      document.getElementById('quitButton').addEventListener('click', quitApp);
 
       ['compactScene', 'settingsScene'].forEach(id => {
         scenes.push(createSwitchScene(document.getElementById(id), {
