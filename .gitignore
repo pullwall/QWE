@@ -1,0 +1,6 @@
+node_modules/
+src-tauri/target/
+dist/three-scene.js
+.sites-runtime/
+.DS_Store
+*.log

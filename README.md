@@ -4,9 +4,11 @@ Q, W, E 키만 감지해 파스텔 키캡이 내려가고 부드러운 합성 �
 
 ## 포함된 기능
 
-- 앱이 다른 창 뒤에 있어도 Q/W/E keydown·keyup 감지
+- Three.js/WebGL 기반 키캡과 굴절·투명 스위치 하우징
+- 앱 포커스 여부와 무관한 Q/W/E keydown·keyup 감지
 - 키 반복 입력 무시
 - 마우스로 키캡 클릭 가능
+- 투명한 프레임리스 창과 빈 영역 드래그 이동
 - Compact → hover 설정 버튼 → Expanded 설정 패널
 - Soft / Creamy / Clicky / Thock 사운드
 - 볼륨, 4가지 색상 테마, Always on top
@@ -35,6 +37,21 @@ npm run build
 src-tauri/target/release/bundle/msi/
 src-tauri/target/release/bundle/nsis/
 ```
+
+## GitHub Releases에 자동 배포
+
+프로젝트를 GitHub 저장소에 올린 뒤 버전 태그를 푸시하면 GitHub Actions가 Windows에서 자동으로 빌드하고 Releases에 `.exe`와 `.msi`를 게시합니다.
+
+먼저 `package.json`과 `src-tauri/tauri.conf.json`의 `version`을 배포할 버전으로 맞춥니다. 이번 변경은 둘 다 `0.2.0`입니다:
+
+```bash
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+Actions 탭의 `Release Windows installer` 작업이 끝나면 저장소의 Releases 페이지에서 설치 파일을 받을 수 있습니다. 일반 사용자는 이름에 `setup.exe`가 붙은 파일만 내려받아 실행하면 됩니다.
+
+태그, `package.json`, `tauri.conf.json`의 버전이 서로 다르면 잘못된 설치 파일이 배포되지 않도록 작업이 실패하게 설정되어 있습니다.
 
 ## 웹 데모
 

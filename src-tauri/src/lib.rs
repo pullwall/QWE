@@ -54,6 +54,11 @@ fn set_always_on_top(window: WebviewWindow, enabled: bool) -> Result<(), String>
 }
 
 #[tauri::command]
+fn start_dragging(window: WebviewWindow) -> Result<(), String> {
+    window.start_dragging().map_err(|error| error.to_string())
+}
+
+#[tauri::command]
 fn quit_app(app: AppHandle) {
     app.exit(0);
 }
@@ -70,7 +75,7 @@ pub fn run() {
             });
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![set_view_mode, set_always_on_top, quit_app])
+        .invoke_handler(tauri::generate_handler![set_view_mode, set_always_on_top, start_dragging, quit_app])
         .run(tauri::generate_context!())
         .expect("error while running QWE Healing Clicker");
 }

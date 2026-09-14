@@ -1,15 +1,20 @@
 {
   "name": "qwe-healing-clicker",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A tiny pastel desktop clicker for Q, W, and E.",
   "scripts": {
     "tauri": "tauri",
     "dev": "tauri dev",
     "build": "tauri build",
+    "build:web": "esbuild src/three-scene.js --bundle --format=esm --minify --outfile=dist/three-scene.js",
     "icon": "tauri icon dist/favicon.svg"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.8.4"
+    "@tauri-apps/cli": "^2.8.4",
+    "esbuild": "^0.28.2"
+  },
+  "dependencies": {
+    "three": "^0.186.0"
   }
 }

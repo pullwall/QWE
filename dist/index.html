@@ -43,7 +43,7 @@
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.025'/%3E%3C/svg%3E");
     }
     body.tauri-runtime { background: transparent; }
-    body.tauri-runtime::before { opacity: .18; }
+    body.tauri-runtime::before { display: none; }
     button, input { font: inherit; }
     button { -webkit-tap-highlight-color: transparent; }
     .stage { width: min(100vw, 680px); padding: 24px; display: grid; place-items: center; }
@@ -61,9 +61,16 @@
       overflow: hidden;
     }
     .clicker.expanded { width: 620px; height: 650px; border-radius: 46px; }
+    .clicker:not(.expanded) {
+      background: transparent;
+      border-color: transparent;
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
     .drag-surface { position: absolute; inset: 0; z-index: 0; }
     .compact-view, .settings-view { position: absolute; inset: 0; z-index: 1; }
-    .compact-view { display: grid; place-items: center; padding: 32px 32px 24px; transition: transform .28s ease, opacity .2s ease; }
+    .compact-view { display: grid; place-items: center; padding: 18px 22px 20px; transition: transform .28s ease, opacity .2s ease; cursor: grab; }
     .expanded .compact-view { opacity: 0; transform: translateY(-16px) scale(.96); pointer-events: none; }
     .settings-view { opacity: 0; transform: translateY(16px); pointer-events: none; transition: opacity .22s ease .08s, transform .3s ease .05s; padding: 30px 34px 28px; display: flex; flex-direction: column; }
     .expanded .settings-view { opacity: 1; transform: translateY(0); pointer-events: auto; }
@@ -111,13 +118,24 @@
     .switch-body::after { content: ""; position: absolute; left: 11px; right: 11px; bottom: 10px; height: 7px; border-radius: 9px; background: rgba(131,160,188,.16); box-shadow: inset 0 1px 1px white; }
     .key-switch.pressed .cap, .key-switch:active .cap { transform: perspective(180px) rotateX(-1deg) translateY(12px); box-shadow: inset 0 2px 5px rgba(255,255,255,.58), inset 0 -3px 8px rgba(107,123,145,.12), 0 3px 4px rgba(61,82,108,.12); }
     .key-switch:focus-visible .cap { outline: 3px solid color-mix(in srgb, var(--accent) 50%, white); outline-offset: 4px; }
+    .three-stage {
+      display: block;
+      width: 400px;
+      height: 184px;
+      max-width: 100%;
+      touch-action: none;
+      outline: none;
+      filter: drop-shadow(0 18px 17px rgba(71, 96, 126, .14));
+    }
+    .three-stage:focus-visible { border-radius: 26px; outline: 2px solid color-mix(in srgb, var(--accent) 62%, white); outline-offset: 2px; }
     .soft-note { position: absolute; left: 0; right: 0; bottom: 14px; text-align: center; color: var(--muted); font-size: 13px; letter-spacing: .02em; opacity: .68; }
     .settings-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
     h1 { margin: 0; font-size: 27px; line-height: 1.2; letter-spacing: -.035em; font-weight: 720; }
     .settings-head p { margin: 7px 0 0; color: var(--muted); font-size: 14px; }
     .close-button { width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--line); background: rgba(255,255,255,.62); color: #758198; cursor: pointer; font-size: 25px; line-height: 1; display: grid; place-items: center; }
     .close-button:hover { background: white; color: var(--ink); }
-    .settings-key-wrap { display: grid; place-items: center; height: 170px; transform: scale(.88); margin: -2px 0 -4px; }
+    .settings-key-wrap { display: grid; place-items: center; height: 176px; margin: -2px 0 -4px; }
+    .settings-key-wrap .three-stage { width: 452px; height: 184px; }
     .settings-stack { border-top: 1px solid var(--line); padding-top: 19px; display: grid; gap: 20px; }
     .setting { display: grid; gap: 11px; }
     .setting-line { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
@@ -151,7 +169,8 @@
       .clicker { transform: scale(min(1, calc((100vw - 24px) / 432))); }
       .clicker.expanded { width: calc(100vw - 24px); max-width: 620px; height: min(650px, calc(100vh - 24px)); transform: none; overflow-y: auto; }
       .settings-view { padding: 25px 22px 22px; }
-      .settings-key-wrap { transform: scale(.78); height: 150px; }
+      .settings-key-wrap { height: 150px; }
+      .settings-key-wrap .three-stage { height: 158px; }
       .sound-options { grid-template-columns: repeat(2, 1fr); }
     }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
@@ -165,8 +184,8 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 15.3a3.3 3.3 0 1 0 0-6.6 3.3 3.3 0 0 0 0 6.6Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21H9.55v-.1A1.7 1.7 0 0 0 8.5 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.86-2.86.06-.06A1.7 1.7 0 0 0 4.1 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H2.3V9.55h.1A1.7 1.7 0 0 0 4.1 8.5a1.7 1.7 0 0 0-.34-1.88l-.06-.06L6.56 3.7l.06.06A1.7 1.7 0 0 0 8.5 4.1a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1v-.1h4.05v.1A1.7 1.7 0 0 0 15 4.1a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.86 2.86-.06.06A1.7 1.7 0 0 0 19.4 8.5c.2.5.6.85 1.05 1.05.35.15.7.2 1.05.2h.2v4.05h-.2c-.35 0-.7.05-1.05.2-.45.2-.85.55-1.05 1Z"/></svg>
       </button>
 
-      <div class="compact-view">
-        <div class="key-row" id="compactKeys" aria-label="Q W E 키"></div>
+      <div class="compact-view" id="compactView">
+        <canvas class="three-stage" id="compactScene" tabindex="0" aria-label="Q W E 3D 키 스위치"></canvas>
         <div class="soft-note">Q · W · E 를 눌러보세요</div>
       </div>
 
@@ -175,7 +194,7 @@
           <div><h1>Keyboard Clicker</h1><p>잠깐, 눌러 쉬어가요.</p></div>
           <button class="close-button" id="closeSettings" aria-label="설정 닫기">×</button>
         </header>
-        <div class="settings-key-wrap"><div class="key-row" id="settingsKeys" aria-label="Q W E 키"></div></div>
+        <div class="settings-key-wrap"><canvas class="three-stage" id="settingsScene" tabindex="0" aria-label="Q W E 3D 키 스위치"></canvas></div>
         <div class="settings-stack">
           <section class="setting">
             <div class="setting-line"><span class="setting-label">소리</span><span class="setting-value" id="soundName">Creamy</span></div>
@@ -208,7 +227,8 @@
       </div>
     </section>
   </main>
-  <script>
+  <script type="module">
+    import { createSwitchScene } from './three-scene.js';
     (() => {
       const isTauri = Boolean(window.__TAURI__);
       if (isTauri) document.body.classList.add('tauri-runtime');
@@ -218,27 +238,14 @@
       const settingsButton = document.getElementById('settingsButton');
       const closeSettings = document.getElementById('closeSettings');
       const pressed = new Set();
-      const keyEls = { Q: [], W: [], E: [] };
+      const validKeys = new Set(['Q', 'W', 'E']);
+      const scenes = [];
       const saved = JSON.parse(localStorage.getItem('qwe-clicker-settings') || '{}');
       let soundPack = saved.soundPack || 'creamy';
       let volume = Number.isFinite(saved.volume) ? saved.volume : 72;
       let theme = saved.theme || 'cotton';
       let always = Boolean(saved.always);
       let audioCtx;
-
-      function keyMarkup(key) {
-        return `<button class="key-switch" data-key="${key}" aria-label="${key} 키"><span class="cap">${key}</span><span class="switch-body" aria-hidden="true"></span></button>`;
-      }
-      ['compactKeys','settingsKeys'].forEach(id => {
-        document.getElementById(id).innerHTML = ['Q','W','E'].map(keyMarkup).join('');
-      });
-      document.querySelectorAll('.key-switch').forEach(el => {
-        keyEls[el.dataset.key].push(el);
-        el.addEventListener('pointerdown', e => { e.preventDefault(); el.setPointerCapture(e.pointerId); press(el.dataset.key); });
-        el.addEventListener('pointerup', () => release(el.dataset.key));
-        el.addEventListener('pointercancel', () => release(el.dataset.key));
-        el.addEventListener('lostpointercapture', () => release(el.dataset.key));
-      });
 
       function save() { localStorage.setItem('qwe-clicker-settings', JSON.stringify({ soundPack, volume, theme, always })); }
       function ensureAudio() { audioCtx ||= new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); return audioCtx; }
@@ -271,12 +278,12 @@
         noise.connect(noiseGain).connect(master); noise.start(now);
       }
       function press(key) {
-        if (!keyEls[key] || pressed.has(key)) return;
-        pressed.add(key); keyEls[key].forEach(el => el.classList.add('pressed')); play('down');
+        if (!validKeys.has(key) || pressed.has(key)) return;
+        pressed.add(key); scenes.forEach(scene => scene.setPressed(key, true)); play('down');
       }
       function release(key) {
-        if (!keyEls[key] || !pressed.has(key)) return;
-        pressed.delete(key); keyEls[key].forEach(el => el.classList.remove('pressed')); play('up');
+        if (!validKeys.has(key) || !pressed.has(key)) return;
+        pressed.delete(key); scenes.forEach(scene => scene.setPressed(key, false)); play('up');
       }
       function openSettings(open) {
         clicker.classList.toggle('expanded', open); settingsView.setAttribute('aria-hidden', String(!open)); settingsButton.hidden = open;
@@ -285,12 +292,18 @@
       }
       settingsButton.addEventListener('click', () => openSettings(true));
       closeSettings.addEventListener('click', () => openSettings(false));
+      document.getElementById('compactView').addEventListener('pointerdown', event => {
+        if (event.target === event.currentTarget) tauriInvoke('start_dragging');
+      });
+      document.querySelector('.settings-head').addEventListener('pointerdown', event => {
+        if (!event.target.closest('button')) tauriInvoke('start_dragging');
+      });
       document.addEventListener('keydown', e => {
         if (e.key === 'Escape' && clicker.classList.contains('expanded')) { openSettings(false); return; }
-        if (isTauri || e.repeat) return;
-        const key = e.key.toUpperCase(); if (keyEls[key]) press(key);
+        if (e.repeat) return;
+        const key = e.key.toUpperCase(); if (validKeys.has(key)) press(key);
       });
-      document.addEventListener('keyup', e => { if (isTauri) return; const key = e.key.toUpperCase(); if (keyEls[key]) release(key); });
+      document.addEventListener('keyup', e => { const key = e.key.toUpperCase(); if (validKeys.has(key)) release(key); });
       window.addEventListener('blur', () => { if (!isTauri) [...pressed].forEach(release); });
 
       const names = { soft:'Soft', creamy:'Creamy', clicky:'Clicky', thock:'Thock', cotton:'Cotton', strawberry:'Strawberry', mint:'Mint', lavender:'Lavender' };
@@ -298,7 +311,7 @@
         cotton: ['#fffdfd','#ffd8de','#9ce9cf','#57d4b1'], strawberry: ['#ffe5e8','#ffabc4','#fff0c9','#f67fa5'],
         mint: ['#fffefe','#b9efdf','#acddeb','#58ccb0'], lavender: ['#fffefe','#d9cbf1','#ffd0df','#9b86df']
       };
-      function applyTheme(next) { theme = next; const [q,w,e,a] = themes[theme]; const root = document.documentElement.style; root.setProperty('--key-q',q); root.setProperty('--key-w',w); root.setProperty('--key-e',e); root.setProperty('--accent',a); document.getElementById('themeName').textContent = names[theme]; document.querySelectorAll('.theme-dot').forEach(b => { const active=b.dataset.theme===theme; b.classList.toggle('active',active); b.setAttribute('aria-checked',String(active)); }); save(); }
+      function applyTheme(next) { theme = next; const [q,w,e,a] = themes[theme]; const root = document.documentElement.style; root.setProperty('--key-q',q); root.setProperty('--key-w',w); root.setProperty('--key-e',e); root.setProperty('--accent',a); scenes.forEach(scene => scene.setColors([q,w,e])); document.getElementById('themeName').textContent = names[theme]; document.querySelectorAll('.theme-dot').forEach(b => { const active=b.dataset.theme===theme; b.classList.toggle('active',active); b.setAttribute('aria-checked',String(active)); }); save(); }
       document.querySelectorAll('.theme-dot').forEach(b => b.addEventListener('click', () => applyTheme(b.dataset.theme)));
       function applySound(next, preview=true) { soundPack=next; document.getElementById('soundName').textContent=names[next]; document.querySelectorAll('.sound-option').forEach(b => { const active=b.dataset.sound===next; b.classList.toggle('active',active); b.setAttribute('aria-checked',String(active)); }); if (preview) { play('down'); setTimeout(()=>play('up'),70); } save(); }
       document.querySelectorAll('.sound-option').forEach(b => b.addEventListener('click', () => applySound(b.dataset.sound)));
@@ -311,12 +324,20 @@
       alwaysButton.addEventListener('click', () => applyAlways(!always));
       document.getElementById('quitButton').addEventListener('click', () => isTauri ? tauriInvoke('quit_app') : openSettings(false));
 
+      ['compactScene', 'settingsScene'].forEach(id => {
+        scenes.push(createSwitchScene(document.getElementById(id), {
+          onPress: press,
+          onRelease: release,
+          onDrag: () => tauriInvoke('start_dragging'),
+        }));
+      });
       applyTheme(theme); applySound(soundPack, false); applyVolume(volume); applyAlways(always, isTauri);
       if (isTauri) {
         window.__TAURI__.event.listen('qwe-key-event', ({ payload }) => {
           const key = String(payload.key || '').toUpperCase(); payload.state === 'down' ? press(key) : release(key);
         });
       }
+      window.addEventListener('beforeunload', () => scenes.forEach(scene => scene.dispose()));
     })();
   </script>
 </body>
