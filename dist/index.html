@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f3f8fc" />
+  <meta name="description" content="Q, W, E를 누르며 잠깐 쉬어가는 작은 파스텔 힐링 클리커" />
+  <title>QWE Healing Clicker</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #27324a;
+      --muted: #8490a8;
+      --line: rgba(129, 153, 181, .16);
+      --glass: rgba(249, 252, 255, .76);
+      --shadow: 0 30px 80px rgba(89, 112, 142, .18), inset 0 1px 1px rgba(255,255,255,.96);
+      --mint: #78dfc1;
+      --key-q: #fffdfd;
+      --key-w: #ffd8de;
+      --key-e: #9ce9cf;
+      --accent: #57d4b1;
+    }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; min-height: 100%; margin: 0; }
+    body {
+      overflow: hidden;
+      font-family: Inter, ui-rounded, "SF Pro Display", "Segoe UI", "Noto Sans KR", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 22% 18%, rgba(255, 205, 225, .42), transparent 27%),
+        radial-gradient(circle at 79% 72%, rgba(127, 228, 209, .32), transparent 28%),
+        linear-gradient(145deg, #fdfdff, #edf5fb 55%, #f8fbff);
+      display: grid;
+      place-items: center;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .4;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.025'/%3E%3C/svg%3E");
+    }
+    body.tauri-runtime { background: transparent; }
+    body.tauri-runtime::before { opacity: .18; }
+    button, input { font: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+    .stage { width: min(100vw, 680px); padding: 24px; display: grid; place-items: center; }
+    .clicker {
+      position: relative;
+      width: 432px;
+      height: 212px;
+      border: 1px solid rgba(255,255,255,.88);
+      border-radius: 42px;
+      background: var(--glass);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(30px) saturate(130%);
+      -webkit-backdrop-filter: blur(30px) saturate(130%);
+      transition: width .34s cubic-bezier(.2,.75,.2,1), height .34s cubic-bezier(.2,.75,.2,1), border-radius .3s ease;
+      overflow: hidden;
+    }
+    .clicker.expanded { width: 620px; height: 650px; border-radius: 46px; }
+    .drag-surface { position: absolute; inset: 0; z-index: 0; }
+    .compact-view, .settings-view { position: absolute; inset: 0; z-index: 1; }
+    .compact-view { display: grid; place-items: center; padding: 32px 32px 24px; transition: transform .28s ease, opacity .2s ease; }
+    .expanded .compact-view { opacity: 0; transform: translateY(-16px) scale(.96); pointer-events: none; }
+    .settings-view { opacity: 0; transform: translateY(16px); pointer-events: none; transition: opacity .22s ease .08s, transform .3s ease .05s; padding: 30px 34px 28px; display: flex; flex-direction: column; }
+    .expanded .settings-view { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .hover-control {
+      position: absolute; top: 15px; right: 18px; z-index: 5;
+      width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(143,162,187,.16);
+      color: #6e7a91; background: rgba(255,255,255,.72); box-shadow: 0 9px 24px rgba(88,110,139,.12);
+      display: grid; place-items: center; cursor: pointer; opacity: 0; transform: translateY(5px) scale(.94);
+      transition: opacity .18s ease, transform .18s ease, color .18s ease, background .18s ease;
+    }
+    .clicker:not(.expanded):hover .hover-control, .hover-control:focus-visible { opacity: 1; transform: none; }
+    .hover-control:hover { color: #3c4a63; background: rgba(255,255,255,.95); }
+    .hover-control svg { width: 19px; height: 19px; }
+    .key-row { position: relative; display: flex; align-items: end; justify-content: center; gap: 15px; padding-bottom: 13px; }
+    .key-row::after {
+      content: ""; position: absolute; z-index: -1; left: -15px; right: -15px; bottom: 0; height: 56px; border-radius: 19px;
+      border: 1px solid rgba(255,255,255,.9); background: linear-gradient(180deg, rgba(255,255,255,.42), rgba(214,227,240,.58));
+      box-shadow: inset 0 7px 18px rgba(255,255,255,.75), inset 0 -8px 14px rgba(131,157,184,.12), 0 18px 27px rgba(83,108,139,.13);
+      backdrop-filter: blur(7px);
+    }
+    .key-switch {
+      --cap: var(--key-q); position: relative; width: 100px; height: 119px; padding: 0; border: 0; background: transparent; cursor: pointer; outline: none;
+      filter: drop-shadow(0 12px 8px rgba(68,91,120,.12));
+    }
+    .key-switch[data-key="W"] { --cap: var(--key-w); }
+    .key-switch[data-key="E"] { --cap: var(--key-e); }
+    .cap {
+      position: absolute; z-index: 3; left: 5px; top: 3px; width: 90px; height: 74px;
+      display: grid; place-items: center; color: rgba(61,72,92,.62); font-weight: 700; font-size: 17px; letter-spacing: .04em;
+      border-radius: 22px 22px 14px 14px;
+      background: linear-gradient(145deg, color-mix(in srgb, var(--cap) 80%, white), var(--cap) 60%, color-mix(in srgb, var(--cap) 88%, #a6b6c9));
+      border: 1px solid rgba(255,255,255,.7);
+      box-shadow: inset 0 3px 5px rgba(255,255,255,.72), inset 0 -8px 12px rgba(107,123,145,.12), 0 9px 10px rgba(61,82,108,.15);
+      transform: perspective(180px) rotateX(-4deg) translateY(0);
+      transition: transform 58ms ease-out, box-shadow 58ms ease-out;
+    }
+    .switch-body {
+      position: absolute; z-index: 1; left: 8px; bottom: 4px; width: 84px; height: 62px; border-radius: 12px;
+      background: linear-gradient(150deg, rgba(255,255,255,.82), rgba(198,216,233,.35));
+      border: 1px solid rgba(255,255,255,.9);
+      box-shadow: inset 0 0 0 5px rgba(255,255,255,.2), inset 0 -9px 13px rgba(106,135,165,.13), 0 3px 0 rgba(170,190,211,.25);
+      overflow: hidden;
+    }
+    .switch-body::before { content: ""; position: absolute; left: 30px; top: 9px; width: 24px; height: 33px; border-radius: 7px; background: linear-gradient(#fff, #dbe7ef); box-shadow: 0 0 0 6px rgba(255,255,255,.23); }
+    .switch-body::after { content: ""; position: absolute; left: 11px; right: 11px; bottom: 10px; height: 7px; border-radius: 9px; background: rgba(131,160,188,.16); box-shadow: inset 0 1px 1px white; }
+    .key-switch.pressed .cap, .key-switch:active .cap { transform: perspective(180px) rotateX(-1deg) translateY(12px); box-shadow: inset 0 2px 5px rgba(255,255,255,.58), inset 0 -3px 8px rgba(107,123,145,.12), 0 3px 4px rgba(61,82,108,.12); }
+    .key-switch:focus-visible .cap { outline: 3px solid color-mix(in srgb, var(--accent) 50%, white); outline-offset: 4px; }
+    .soft-note { position: absolute; left: 0; right: 0; bottom: 14px; text-align: center; color: var(--muted); font-size: 13px; letter-spacing: .02em; opacity: .68; }
+    .settings-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+    h1 { margin: 0; font-size: 27px; line-height: 1.2; letter-spacing: -.035em; font-weight: 720; }
+    .settings-head p { margin: 7px 0 0; color: var(--muted); font-size: 14px; }
+    .close-button { width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--line); background: rgba(255,255,255,.62); color: #758198; cursor: pointer; font-size: 25px; line-height: 1; display: grid; place-items: center; }
+    .close-button:hover { background: white; color: var(--ink); }
+    .settings-key-wrap { display: grid; place-items: center; height: 170px; transform: scale(.88); margin: -2px 0 -4px; }
+    .settings-stack { border-top: 1px solid var(--line); padding-top: 19px; display: grid; gap: 20px; }
+    .setting { display: grid; gap: 11px; }
+    .setting-line { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .setting-label { font-size: 14px; font-weight: 650; color: #4b5870; }
+    .setting-value { font-size: 13px; color: var(--muted); }
+    .sound-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .sound-option { border: 1px solid var(--line); background: rgba(255,255,255,.56); color: #738097; border-radius: 14px; padding: 10px 8px; cursor: pointer; font-size: 13px; transition: .18s ease; }
+    .sound-option:hover { background: white; }
+    .sound-option.active { color: #2f665a; background: rgba(120,223,193,.2); border-color: rgba(83,203,171,.35); box-shadow: inset 0 0 0 1px rgba(255,255,255,.7); }
+    .range-wrap { display: flex; align-items: center; gap: 12px; color: #8290a5; }
+    input[type="range"] { width: 100%; height: 5px; appearance: none; background: linear-gradient(90deg, var(--accent) 0 var(--range, 72%), rgba(143,158,181,.19) var(--range, 72%) 100%); border-radius: 99px; outline: none; }
+    input[type="range"]::-webkit-slider-thumb { appearance: none; width: 20px; height: 20px; border-radius: 50%; background: white; border: 4px solid var(--accent); box-shadow: 0 4px 12px rgba(69,114,106,.2); cursor: pointer; }
+    .theme-options { display: flex; gap: 11px; }
+    .theme-dot { width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 3px solid rgba(255,255,255,.9); cursor: pointer; box-shadow: 0 0 0 1px var(--line), 0 5px 12px rgba(80,100,126,.12); }
+    .theme-dot.active { box-shadow: 0 0 0 2px var(--accent), 0 6px 14px rgba(80,100,126,.16); }
+    .theme-dot[data-theme="cotton"] { background: linear-gradient(135deg,#fff 0 32%,#ffd2df 33% 66%,#94e8d0 67%); }
+    .theme-dot[data-theme="strawberry"] { background: linear-gradient(135deg,#ffe3e7 0 32%,#ff9abb 33% 66%,#fff0c9 67%); }
+    .theme-dot[data-theme="mint"] { background: linear-gradient(135deg,#fff 0 32%,#b6efe0 33% 66%,#a7ddec 67%); }
+    .theme-dot[data-theme="lavender"] { background: linear-gradient(135deg,#fff 0 32%,#d8c8f2 33% 66%,#ffcfe0 67%); }
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; padding-top: 2px; }
+    .toggle { position: relative; width: 48px; height: 28px; border: 0; border-radius: 999px; background: rgba(136,151,174,.24); cursor: pointer; transition: background .2s ease; }
+    .toggle::after { content:""; position:absolute; width:22px; height:22px; top:3px; left:3px; border-radius:50%; background:white; box-shadow:0 3px 8px rgba(67,86,112,.19); transition:transform .2s ease; }
+    .toggle.on { background: var(--accent); }
+    .toggle.on::after { transform: translateX(20px); }
+    .toggle[disabled] { opacity: .42; cursor: not-allowed; }
+    .footer-actions { margin-top: auto; display: flex; align-items: center; justify-content: space-between; color: #99a4b6; font-size: 12px; }
+    .quit-button { border: 0; background: none; color: #9da7b8; padding: 8px 0; cursor: pointer; }
+    .quit-button:hover { color: #68758b; }
+    @media (max-width: 660px) {
+      .stage { padding: 12px; }
+      .clicker { transform: scale(min(1, calc((100vw - 24px) / 432))); }
+      .clicker.expanded { width: calc(100vw - 24px); max-width: 620px; height: min(650px, calc(100vh - 24px)); transform: none; overflow-y: auto; }
+      .settings-view { padding: 25px 22px 22px; }
+      .settings-key-wrap { transform: scale(.78); height: 150px; }
+      .sound-options { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <main class="stage" aria-label="QWE 힐링 클리커">
+    <section class="clicker" id="clicker">
+      <div class="drag-surface" data-tauri-drag-region></div>
+      <button class="hover-control" id="settingsButton" aria-label="설정 열기" title="설정">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 15.3a3.3 3.3 0 1 0 0-6.6 3.3 3.3 0 0 0 0 6.6Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21H9.55v-.1A1.7 1.7 0 0 0 8.5 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.86-2.86.06-.06A1.7 1.7 0 0 0 4.1 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H2.3V9.55h.1A1.7 1.7 0 0 0 4.1 8.5a1.7 1.7 0 0 0-.34-1.88l-.06-.06L6.56 3.7l.06.06A1.7 1.7 0 0 0 8.5 4.1a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1v-.1h4.05v.1A1.7 1.7 0 0 0 15 4.1a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.86 2.86-.06.06A1.7 1.7 0 0 0 19.4 8.5c.2.5.6.85 1.05 1.05.35.15.7.2 1.05.2h.2v4.05h-.2c-.35 0-.7.05-1.05.2-.45.2-.85.55-1.05 1Z"/></svg>
+      </button>
+
+      <div class="compact-view">
+        <div class="key-row" id="compactKeys" aria-label="Q W E 키"></div>
+        <div class="soft-note">Q · W · E 를 눌러보세요</div>
+      </div>
+
+      <div class="settings-view" aria-hidden="true" id="settingsView">
+        <header class="settings-head">
+          <div><h1>Keyboard Clicker</h1><p>잠깐, 눌러 쉬어가요.</p></div>
+          <button class="close-button" id="closeSettings" aria-label="설정 닫기">×</button>
+        </header>
+        <div class="settings-key-wrap"><div class="key-row" id="settingsKeys" aria-label="Q W E 키"></div></div>
+        <div class="settings-stack">
+          <section class="setting">
+            <div class="setting-line"><span class="setting-label">소리</span><span class="setting-value" id="soundName">Creamy</span></div>
+            <div class="sound-options" role="radiogroup" aria-label="소리 스타일">
+              <button class="sound-option" data-sound="soft" role="radio">Soft</button>
+              <button class="sound-option active" data-sound="creamy" role="radio">Creamy</button>
+              <button class="sound-option" data-sound="clicky" role="radio">Clicky</button>
+              <button class="sound-option" data-sound="thock" role="radio">Thock</button>
+            </div>
+          </section>
+          <section class="setting">
+            <div class="setting-line"><label class="setting-label" for="volume">볼륨</label><span class="setting-value" id="volumeValue">72%</span></div>
+            <div class="range-wrap"><span aria-hidden="true">♩</span><input id="volume" type="range" min="0" max="100" value="72" aria-label="볼륨" /><span aria-hidden="true">♪</span></div>
+          </section>
+          <section class="setting">
+            <div class="setting-line"><span class="setting-label">테마</span><span class="setting-value" id="themeName">Cotton</span></div>
+            <div class="theme-options" role="radiogroup" aria-label="색상 테마">
+              <button class="theme-dot active" data-theme="cotton" role="radio" aria-label="Cotton" title="Cotton"></button>
+              <button class="theme-dot" data-theme="strawberry" role="radio" aria-label="Strawberry" title="Strawberry"></button>
+              <button class="theme-dot" data-theme="mint" role="radio" aria-label="Mint" title="Mint"></button>
+              <button class="theme-dot" data-theme="lavender" role="radio" aria-label="Lavender" title="Lavender"></button>
+            </div>
+          </section>
+          <div class="toggle-row">
+            <div><div class="setting-label">항상 위에 표시</div><div class="setting-value" id="alwaysHint">데스크톱 앱에서 사용할 수 있어요</div></div>
+            <button class="toggle" id="alwaysOnTop" role="switch" aria-checked="false" aria-label="항상 위에 표시"></button>
+          </div>
+        </div>
+        <footer class="footer-actions"><span>설정은 이 기기에만 저장됩니다</span><button class="quit-button" id="quitButton">앱 종료</button></footer>
+      </div>
+    </section>
+  </main>
+  <script>
+    (() => {
+      const isTauri = Boolean(window.__TAURI__);
+      if (isTauri) document.body.classList.add('tauri-runtime');
+      const tauriInvoke = (command, args = {}) => isTauri ? window.__TAURI__.core.invoke(command, args).catch(() => {}) : Promise.resolve();
+      const clicker = document.getElementById('clicker');
+      const settingsView = document.getElementById('settingsView');
+      const settingsButton = document.getElementById('settingsButton');
+      const closeSettings = document.getElementById('closeSettings');
+      const pressed = new Set();
+      const keyEls = { Q: [], W: [], E: [] };
+      const saved = JSON.parse(localStorage.getItem('qwe-clicker-settings') || '{}');
+      let soundPack = saved.soundPack || 'creamy';
+      let volume = Number.isFinite(saved.volume) ? saved.volume : 72;
+      let theme = saved.theme || 'cotton';
+      let always = Boolean(saved.always);
+      let audioCtx;
+
+      function keyMarkup(key) {
+        return `<button class="key-switch" data-key="${key}" aria-label="${key} 키"><span class="cap">${key}</span><span class="switch-body" aria-hidden="true"></span></button>`;
+      }
+      ['compactKeys','settingsKeys'].forEach(id => {
+        document.getElementById(id).innerHTML = ['Q','W','E'].map(keyMarkup).join('');
+      });
+      document.querySelectorAll('.key-switch').forEach(el => {
+        keyEls[el.dataset.key].push(el);
+        el.addEventListener('pointerdown', e => { e.preventDefault(); el.setPointerCapture(e.pointerId); press(el.dataset.key); });
+        el.addEventListener('pointerup', () => release(el.dataset.key));
+        el.addEventListener('pointercancel', () => release(el.dataset.key));
+        el.addEventListener('lostpointercapture', () => release(el.dataset.key));
+      });
+
+      function save() { localStorage.setItem('qwe-clicker-settings', JSON.stringify({ soundPack, volume, theme, always })); }
+      function ensureAudio() { audioCtx ||= new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); return audioCtx; }
+      const tone = {
+        soft:   { down: [185, .055, .11, .014], up: [260, .045, .07, .01] },
+        creamy: { down: [135, .07,  .16, .018], up: [225, .052, .09, .013] },
+        clicky: { down: [420, .032, .12, .032], up: [620, .026, .08, .024] },
+        thock:  { down: [82,  .095, .22, .02],  up: [142, .07,  .12, .014] }
+      };
+      function play(kind) {
+        if (volume <= 0) return;
+        const ctx = ensureAudio();
+        const now = ctx.currentTime;
+        const [freq, dur, warmth, noiseAmount] = tone[soundPack][kind];
+        const master = ctx.createGain();
+        master.gain.setValueAtTime(Math.max(.0001, (volume / 100) * .28), now);
+        master.gain.exponentialRampToValueAtTime(.0001, now + dur);
+        master.connect(ctx.destination);
+        const osc = ctx.createOscillator();
+        const filter = ctx.createBiquadFilter();
+        osc.type = soundPack === 'clicky' ? 'triangle' : 'sine';
+        osc.frequency.setValueAtTime(freq * (kind === 'down' ? 1.15 : .92), now);
+        osc.frequency.exponentialRampToValueAtTime(freq, now + dur);
+        filter.type = 'lowpass'; filter.frequency.value = 1000 + warmth * 5000; filter.Q.value = .7;
+        osc.connect(filter).connect(master); osc.start(now); osc.stop(now + dur);
+        const length = Math.max(1, Math.floor(ctx.sampleRate * dur));
+        const buffer = ctx.createBuffer(1, length, ctx.sampleRate); const data = buffer.getChannelData(0);
+        for (let i = 0; i < length; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 3) * noiseAmount;
+        const noise = ctx.createBufferSource(); const noiseGain = ctx.createGain(); noise.buffer = buffer; noiseGain.gain.value = .8;
+        noise.connect(noiseGain).connect(master); noise.start(now);
+      }
+      function press(key) {
+        if (!keyEls[key] || pressed.has(key)) return;
+        pressed.add(key); keyEls[key].forEach(el => el.classList.add('pressed')); play('down');
+      }
+      function release(key) {
+        if (!keyEls[key] || !pressed.has(key)) return;
+        pressed.delete(key); keyEls[key].forEach(el => el.classList.remove('pressed')); play('up');
+      }
+      function openSettings(open) {
+        clicker.classList.toggle('expanded', open); settingsView.setAttribute('aria-hidden', String(!open)); settingsButton.hidden = open;
+        tauriInvoke('set_view_mode', { expanded: open });
+        if (open) closeSettings.focus(); else settingsButton.focus();
+      }
+      settingsButton.addEventListener('click', () => openSettings(true));
+      closeSettings.addEventListener('click', () => openSettings(false));
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && clicker.classList.contains('expanded')) { openSettings(false); return; }
+        if (isTauri || e.repeat) return;
+        const key = e.key.toUpperCase(); if (keyEls[key]) press(key);
+      });
+      document.addEventListener('keyup', e => { if (isTauri) return; const key = e.key.toUpperCase(); if (keyEls[key]) release(key); });
+      window.addEventListener('blur', () => { if (!isTauri) [...pressed].forEach(release); });
+
+      const names = { soft:'Soft', creamy:'Creamy', clicky:'Clicky', thock:'Thock', cotton:'Cotton', strawberry:'Strawberry', mint:'Mint', lavender:'Lavender' };
+      const themes = {
+        cotton: ['#fffdfd','#ffd8de','#9ce9cf','#57d4b1'], strawberry: ['#ffe5e8','#ffabc4','#fff0c9','#f67fa5'],
+        mint: ['#fffefe','#b9efdf','#acddeb','#58ccb0'], lavender: ['#fffefe','#d9cbf1','#ffd0df','#9b86df']
+      };
+      function applyTheme(next) { theme = next; const [q,w,e,a] = themes[theme]; const root = document.documentElement.style; root.setProperty('--key-q',q); root.setProperty('--key-w',w); root.setProperty('--key-e',e); root.setProperty('--accent',a); document.getElementById('themeName').textContent = names[theme]; document.querySelectorAll('.theme-dot').forEach(b => { const active=b.dataset.theme===theme; b.classList.toggle('active',active); b.setAttribute('aria-checked',String(active)); }); save(); }
+      document.querySelectorAll('.theme-dot').forEach(b => b.addEventListener('click', () => applyTheme(b.dataset.theme)));
+      function applySound(next, preview=true) { soundPack=next; document.getElementById('soundName').textContent=names[next]; document.querySelectorAll('.sound-option').forEach(b => { const active=b.dataset.sound===next; b.classList.toggle('active',active); b.setAttribute('aria-checked',String(active)); }); if (preview) { play('down'); setTimeout(()=>play('up'),70); } save(); }
+      document.querySelectorAll('.sound-option').forEach(b => b.addEventListener('click', () => applySound(b.dataset.sound)));
+      const volumeEl = document.getElementById('volume');
+      function applyVolume(next) { volume=Number(next); volumeEl.value=volume; volumeEl.style.setProperty('--range',`${volume}%`); document.getElementById('volumeValue').textContent=`${volume}%`; save(); }
+      volumeEl.addEventListener('input', e => applyVolume(e.target.value));
+      const alwaysButton = document.getElementById('alwaysOnTop');
+      if (!isTauri) alwaysButton.disabled = true; else document.getElementById('alwaysHint').textContent = '다른 창 위에 조용히 머물러요';
+      function applyAlways(next, invoke=true) { always=Boolean(next); alwaysButton.classList.toggle('on',always); alwaysButton.setAttribute('aria-checked',String(always)); if (invoke) tauriInvoke('set_always_on_top',{enabled:always}); save(); }
+      alwaysButton.addEventListener('click', () => applyAlways(!always));
+      document.getElementById('quitButton').addEventListener('click', () => isTauri ? tauriInvoke('quit_app') : openSettings(false));
+
+      applyTheme(theme); applySound(soundPack, false); applyVolume(volume); applyAlways(always, isTauri);
+      if (isTauri) {
+        window.__TAURI__.event.listen('qwe-key-event', ({ payload }) => {
+          const key = String(payload.key || '').toUpperCase(); payload.state === 'down' ? press(key) : release(key);
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

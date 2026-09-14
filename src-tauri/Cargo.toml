@@ -1,0 +1,19 @@
+[package]
+name = "qwe-healing-clicker"
+version = "0.1.0"
+description = "A tiny pastel desktop clicker for Q, W, and E"
+authors = ["QWE Clicker"]
+edition = "2021"
+
+[lib]
+name = "qwe_healing_clicker_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+serde = { version = "1", features = ["derive"] }
+rdev = "0.5"
+
