@@ -16,10 +16,10 @@
       --glass: rgba(249, 252, 255, .76);
       --shadow: 0 30px 80px rgba(89, 112, 142, .18), inset 0 1px 1px rgba(255,255,255,.96);
       --mint: #78dfc1;
-      --key-q: #fffdfd;
-      --key-w: #ffd8de;
-      --key-e: #9ce9cf;
-      --accent: #57d4b1;
+      --key-q: #ff8fb1;
+      --key-w: #73dedb;
+      --key-e: #ffd267;
+      --accent: #ef759e;
     }
     * { box-sizing: border-box; }
     html, body { width: 100%; min-height: 100%; margin: 0; }
@@ -125,10 +125,8 @@
       max-width: 100%;
       touch-action: none;
       outline: none;
-      filter: drop-shadow(0 18px 17px rgba(71, 96, 126, .14));
     }
     .three-stage:focus-visible { border-radius: 26px; outline: 2px solid color-mix(in srgb, var(--accent) 62%, white); outline-offset: 2px; }
-    .soft-note { position: absolute; left: 0; right: 0; bottom: 14px; text-align: center; color: var(--muted); font-size: 13px; letter-spacing: .02em; opacity: .68; }
     .settings-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
     h1 { margin: 0; font-size: 27px; line-height: 1.2; letter-spacing: -.035em; font-weight: 720; }
     .settings-head p { margin: 7px 0 0; color: var(--muted); font-size: 14px; }
@@ -186,7 +184,6 @@
 
       <div class="compact-view" id="compactView">
         <canvas class="three-stage" id="compactScene" tabindex="0" aria-label="Q W E 3D 키 스위치"></canvas>
-        <div class="soft-note">Q · W · E 를 눌러보세요</div>
       </div>
 
       <div class="settings-view" aria-hidden="true" id="settingsView">
@@ -308,8 +305,8 @@
 
       const names = { soft:'Soft', creamy:'Creamy', clicky:'Clicky', thock:'Thock', cotton:'Cotton', strawberry:'Strawberry', mint:'Mint', lavender:'Lavender' };
       const themes = {
-        cotton: ['#fffdfd','#ffd8de','#9ce9cf','#57d4b1'], strawberry: ['#ffe5e8','#ffabc4','#fff0c9','#f67fa5'],
-        mint: ['#fffefe','#b9efdf','#acddeb','#58ccb0'], lavender: ['#fffefe','#d9cbf1','#ffd0df','#9b86df']
+        cotton: ['#ff8fb1','#73dedb','#ffd267','#ef759e'], strawberry: ['#ff739f','#ffadc3','#ffd069','#f05f91'],
+        mint: ['#70e0c1','#55cddd','#ffd36f','#37bfa1'], lavender: ['#a994ee','#df8fd3','#ffb07b','#8872dc']
       };
       function applyTheme(next) { theme = next; const [q,w,e,a] = themes[theme]; const root = document.documentElement.style; root.setProperty('--key-q',q); root.setProperty('--key-w',w); root.setProperty('--key-e',e); root.setProperty('--accent',a); scenes.forEach(scene => scene.setColors([q,w,e])); document.getElementById('themeName').textContent = names[theme]; document.querySelectorAll('.theme-dot').forEach(b => { const active=b.dataset.theme===theme; b.classList.toggle('active',active); b.setAttribute('aria-checked',String(active)); }); save(); }
       document.querySelectorAll('.theme-dot').forEach(b => b.addEventListener('click', () => applyTheme(b.dataset.theme)));
