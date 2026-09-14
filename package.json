@@ -1,7 +1,7 @@
 {
   "name": "qwe-healing-clicker",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A tiny pastel desktop clicker for Q, W, and E.",
   "scripts": {
     "tauri": "tauri",
