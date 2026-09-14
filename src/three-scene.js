@@ -75,9 +75,8 @@ export function createSwitchScene(canvas, handlers = {}) {
   renderer.setClearColor(0x000000, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.12;
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMappingExposure = .96;
+  renderer.shadowMap.enabled = false;
 
   const scene = new THREE.Scene();
   scene.environment = reflectionTexture();
@@ -85,20 +84,14 @@ export function createSwitchScene(canvas, handlers = {}) {
   camera.position.set(0, 5.2, 9.4);
   camera.lookAt(0, .62, 0);
 
-  scene.add(new THREE.HemisphereLight(0xffffff, 0xb9c6d8, 2.3));
-  const keyLight = new THREE.DirectionalLight(0xffffff, 4.4);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xa9b8c8, 1.65));
+  const keyLight = new THREE.DirectionalLight(0xffffff, 3.35);
   keyLight.position.set(-4, 7, 5);
-  keyLight.castShadow = true;
-  keyLight.shadow.mapSize.set(1024, 1024);
-  keyLight.shadow.camera.left = -7;
-  keyLight.shadow.camera.right = 7;
-  keyLight.shadow.camera.top = 5;
-  keyLight.shadow.camera.bottom = -4;
   scene.add(keyLight);
-  const pinkLight = new THREE.PointLight(0xffb9d4, 8, 14);
+  const pinkLight = new THREE.PointLight(0xff7da8, 3.2, 14);
   pinkLight.position.set(-4, 3, 3);
   scene.add(pinkLight);
-  const mintLight = new THREE.PointLight(0x9ff3dd, 7, 14);
+  const mintLight = new THREE.PointLight(0x69ddd0, 2.8, 14);
   mintLight.position.set(4, 2.5, 2);
   scene.add(mintLight);
 
@@ -131,23 +124,15 @@ export function createSwitchScene(canvas, handlers = {}) {
 
   const base = new THREE.Mesh(roundedCuboid(6.25, .34, 2.12, .24, 7), glass.clone());
   base.position.y = .09;
-  base.castShadow = true;
-  base.receiveShadow = true;
   world.add(base);
   const lowerBase = new THREE.Mesh(roundedCuboid(6.05, .17, 1.93, .2, 6), innerGlass);
   lowerBase.position.y = -.08;
   world.add(lowerBase);
 
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(9, 5), new THREE.ShadowMaterial({ color: 0x6e7f98, opacity: .13, transparent: true }));
-  floor.rotation.x = -Math.PI / 2;
-  floor.position.y = -.12;
-  floor.receiveShadow = true;
-  world.add(floor);
-
   const capMaterials = {};
   const keyStates = {};
   const pickMeshes = [];
-  const initial = { Q: '#fffdfd', W: '#ffd8de', E: '#9ce9cf' };
+  const initial = { Q: '#ff8fb1', W: '#73dedb', E: '#ffd267' };
 
   ['Q', 'W', 'E'].forEach((key, index) => {
     const root = new THREE.Group();
@@ -158,8 +143,6 @@ export function createSwitchScene(canvas, handlers = {}) {
     housingMaterial.attenuationColor = new THREE.Color(index === 1 ? 0xffe7ef : index === 2 ? 0xd7fff3 : 0xf7fbff);
     const housing = new THREE.Mesh(roundedCuboid(1.73, .78, 1.73, .19, 6), housingMaterial);
     housing.position.y = .42;
-    housing.castShadow = true;
-    housing.receiveShadow = true;
     root.add(housing);
 
     const innerPlate = new THREE.Mesh(roundedCuboid(1.34, .14, 1.34, .1, 4), innerGlass.clone());
@@ -168,7 +151,6 @@ export function createSwitchScene(canvas, handlers = {}) {
 
     const stem = new THREE.Mesh(new THREE.CylinderGeometry(.25, .31, .72, 20), stemMaterial.clone());
     stem.position.y = .92;
-    stem.castShadow = true;
     root.add(stem);
 
     for (let loop = 0; loop < 3; loop += 1) {
@@ -182,20 +164,18 @@ export function createSwitchScene(canvas, handlers = {}) {
     root.add(capPivot);
     const capMaterial = new THREE.MeshPhysicalMaterial({
       color: initial[key],
-      roughness: .29,
+      roughness: .24,
       metalness: 0,
-      clearcoat: .42,
-      clearcoatRoughness: .2,
-      sheen: .22,
+      clearcoat: .5,
+      clearcoatRoughness: .16,
+      sheen: .08,
       sheenColor: new THREE.Color(0xffffff),
-      envMapIntensity: 1.18,
+      envMapIntensity: .92,
     });
     capMaterials[key] = capMaterial;
     const cap = new THREE.Mesh(roundedCuboid(1.58, .84, 1.58, .22, 8), capMaterial);
     cap.position.y = 1.39;
     cap.scale.set(.98, 1, .93);
-    cap.castShadow = true;
-    cap.receiveShadow = true;
     cap.userData.key = key;
     capPivot.add(cap);
     pickMeshes.push(cap);
