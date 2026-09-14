@@ -1,0 +1,54 @@
+name: Release Windows installer
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish Windows installers
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Check release version
+        shell: pwsh
+        run: |
+          $tagVersion = "${{ github.ref_name }}".TrimStart("v")
+          $tauriVersion = (Get-Content "src-tauri/tauri.conf.json" | ConvertFrom-Json).version
+          $packageVersion = (Get-Content "package.json" | ConvertFrom-Json).version
+          if ($tagVersion -ne $tauriVersion -or $tagVersion -ne $packageVersion) {
+            throw "Tag v$tagVersion must match package.json and src-tauri/tauri.conf.json ($packageVersion / $tauriVersion)."
+          }
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build and publish installers
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "QWE Healing Clicker ${{ github.ref_name }}"
+          releaseBody: |
+            QWE Healing Clicker Windows installer.
+
+            Download the setup .exe for the simplest installation.
+          releaseDraft: false
+          prerelease: false
