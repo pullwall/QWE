@@ -30,21 +30,26 @@ function roundedCuboid(width, height, depth, radius, bevel = 5) {
   return geometry;
 }
 
-function labelTexture(letter) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 256;
-  const context = canvas.getContext('2d');
-  context.clearRect(0, 0, 256, 256);
-  context.fillStyle = 'rgba(44, 52, 70, .62)';
-  context.font = '700 76px Inter, Segoe UI, sans-serif';
-  context.textAlign = 'center';
-  context.textBaseline = 'middle';
-  context.fillText(letter, 128, 132);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 4;
-  return texture;
+function keycapGeometry(width, height, depth, radius) {
+  const geometry = roundedCuboid(width, height, depth, radius, 8);
+  geometry.computeBoundingBox();
+  const { min, max } = geometry.boundingBox;
+  const position = geometry.attributes.position;
+  const span = Math.max(.001, max.y - min.y);
+
+  for (let index = 0; index < position.count; index += 1) {
+    const t = THREE.MathUtils.clamp((position.getY(index) - min.y) / span, 0, 1);
+    const eased = t * t * (3 - 2 * t);
+    const horizontalScale = THREE.MathUtils.lerp(1.07, .76, eased);
+    position.setX(index, position.getX(index) * horizontalScale);
+    position.setZ(index, position.getZ(index) * horizontalScale);
+  }
+
+  position.needsUpdate = true;
+  geometry.computeBoundingBox();
+  geometry.computeBoundingSphere();
+  geometry.computeVertexNormals();
+  return geometry;
 }
 
 function reflectionTexture() {
@@ -173,20 +178,12 @@ export function createSwitchScene(canvas, handlers = {}) {
       envMapIntensity: .92,
     });
     capMaterials[key] = capMaterial;
-    const cap = new THREE.Mesh(roundedCuboid(1.58, .84, 1.58, .22, 8), capMaterial);
+    const cap = new THREE.Mesh(keycapGeometry(1.58, .86, 1.58, .2), capMaterial);
     cap.position.y = 1.39;
     cap.scale.set(.98, 1, .93);
     cap.userData.key = key;
     capPivot.add(cap);
     pickMeshes.push(cap);
-
-    const label = new THREE.Mesh(
-      new THREE.PlaneGeometry(.65, .65),
-      new THREE.MeshBasicMaterial({ map: labelTexture(key), transparent: true, depthWrite: false, toneMapped: false })
-    );
-    label.rotation.x = -Math.PI / 2;
-    label.position.set(0, 1.825, -.03);
-    capPivot.add(label);
 
     keyStates[key] = { pivot: capPivot, target: 0, velocity: 0 };
   });
